@@ -69,6 +69,37 @@ public class Util {
                 .getInt("id");
     }
 
+    public static int createTestTransaction(Integer categoryId, String categoryName, String sessionId) {
+        String testTransaction =
+                "{" +
+                        "\"date\": \"1889-04-20T19:45:04.030Z\", " +
+                        "\"amount\": 213.12, " +
+                        "\"externalIBAN\": \"string\", " +
+                        "\"type\": \"deposit\", " +
+                        "\"category\": {" +
+                        "    \"id\": " + categoryId + "," +
+                        "    \"name\": \"" + categoryName + "\""+
+                        "  }" +
+                        "}";
+
+        return given()
+                .header("X-session-ID", sessionId)
+                .body(testTransaction)
+                .post("/transactions")
+                .then()
+                .extract()
+                .response()
+                .getBody()
+                .jsonPath()
+                .getInt("id");
+    }
+
+    public static void deleteTestTransaction(int id, String sessionId) {
+        given()
+                .header("X-session-ID", sessionId)
+                .delete(String.format("api/v1/transactions/%d", id));
+    }
+
     public static void deleteTestCategory(int id, String sessionId) {
         given()
                 .header("X-session-ID", sessionId)

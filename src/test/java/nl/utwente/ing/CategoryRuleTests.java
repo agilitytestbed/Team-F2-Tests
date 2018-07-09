@@ -24,19 +24,44 @@
  */
 package nl.utwente.ing;
 
+import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 
-import java.nio.file.Path;
+import java.net.URI;
 import java.nio.file.Paths;
+
+import static io.restassured.RestAssured.given;
+import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchema;
 
 public class CategoryRuleTests {
 
-    private static final Path CATEGORY_RULE_SCHEME = Paths.get
-            ("src/test/java/nl/utwente/ing/schemas/categoryrules/category-rule.json");
-    private static final Path CATEGORY_RULE_LIST_SCHEMA_PATH = Paths.get
-            ("src/test/java/nl/utwente/ing/schemas/categoryrules/category-rule-list.json");
+    private static final URI CATEGORY_RULE_SCHEMA = Paths.get
+            ("src/test/java/nl/utwente/ing/schemas/categoryrules/category-rule.json").toAbsolutePath().toUri();
+    private static final URI CATEGORY_RULE_LIST_SCHEMA = Paths.get
+            ("src/test/java/nl/utwente/ing/schemas/categoryrules/category-rule-list.json").toAbsolutePath().toUri();
+
+    private static final String TEST_CATEGORY_NAME = "TEST_CATEGORY";
 
     private static String sessionId;
+    private static Integer categoryId;
+    private static Integer transactionId;
+    private Integer categoryRuleId;
+
+    private static String  validCategoryRule = "{\n" +
+            "  \"description\": \"University of Twente\",\n" +
+            "  \"iBAN\": \"NL39RABO0300065264\",\n" +
+            "  \"type\": \"deposit\",\n" +
+            "  \"category_id\": 0,\n" +
+            "  \"applyOnHistory\": true\n" +
+            "}";
+    private static String invalidCategoryRule = "{\n" +
+            "  \"description\": \"University of Twente\",\n" +
+            "  \"iBAN\": \"NL39RABO0300065264\",\n" +
+            "  \"type\": \"deposit\",\n" +
+            "  \"applyOnHistory\": true\n" +
+            "}";
+
 
     /**
      * Makes sure all tests share the same session ID by setting sessionId if it does not exist yet.
@@ -48,6 +73,141 @@ public class CategoryRuleTests {
         }
     }
 
+    /**
+     * Makes sure a test category is present to test with.
+     */
+    @Before
+    public void setTestCategory() {
+        getTestSession();
+
+        if (categoryId == null) {
+            categoryId = Util.createTestCategory(TEST_CATEGORY_NAME, sessionId);
+        }
+    }
+
+    /**
+     * Makes sure a test Transaction is present to test with.
+     */
+    @Before
+    public void setTestTransaction() {
+        getTestSession();
+
+        if (transactionId == null) {
+            transactionId = Util.createTestTransaction(categoryId, TEST_CATEGORY_NAME, sessionId);
+        }
+    }
+
+    /**
+     * Makes sure the test transaction is deleted after the tests are run.
+     */
+    @Before
+    public void deleteTestTransaction() {
+        getTestSession();
+
+        if (transactionId != null) {
+            Util.deleteTestTransaction(transactionId, sessionId);
+        }
+    }
+
+    /**
+     * Makes sure the test category used is deleted after the tests are run.
+     */
+    @After
+    public void deleteTestCategory() {
+        getTestSession();
+
+        if (categoryId != null) {
+            Util.deleteTestCategory(categoryId, sessionId);
+        }
+    }
+
+    /*
+     *  Tests related to GET requests on the /categoryRules API endpoint.
+     *  API Documentation: https://app.swaggerhub.com/apis/djhuistra/INGHonours-CategoryRules/1.1.0#/categoryRules/getCategoryRules
+     */
+    /**
+     * Performs a GET request on the CategoryRules API endpoint.
+     *
+     * This test uses a valid session to get all the created categoryRules and checks if it is in a valid format.
+     */
+    @Test
+    public void validSessionCategoryRulesGetTest() {
+        //Make sure there is at least one cateogryRule to retrieve.
+        validSessionValidCategoryRulesCreateTest();
+
+        given()
+                .header("X-session-ID", sessionId)
+                .get("/categoryRules")
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .assertThat()
+                .body(matchesJsonSchema(CATEGORY_RULE_LIST_SCHEMA));
+    }
+
+    /**
+     * Performs a GET request on the CategoryRules API endpoint.
+     *
+     * This test uses an invalid session to check whether the API returns the correct status code.
+     */
+    @Test
+    public void invalidSessionCategoryRulesGetTest() {
+        given()
+                .get("/categoryRules")
+                .then()
+                .assertThat()
+                .statusCode(401);
+    }
+
+    /*
+     *  Tests related to POST requests on the /categoryRules API endpoint.
+     *  API Documentation: https://app.swaggerhub.com/apis/djhuistra/INGHonours-CategoryRules/1.1.0#/categoryRules/addCategoryRule
+     */
+    /**
+     *  Performs a POST request on the CategoryRules API endpoint.
+     *
+     *  This test uses a valid session to check whether the API result adheres to the categoryRule format.
+     */
+    @Test
+    public void validSessionValidCategoryRulesCreateTest() {
+        categoryRuleId = given()
+                .header("X-session-ID", sessionId)
+                .body(validCategoryRule)
+                .post("/categoryRules")
+                .then()
+                .assertThat()
+                .statusCode(201)
+                .body(matchesJsonSchema(CATEGORY_RULE_SCHEMA))
+                .extract()
+                .jsonPath()
+                .getInt("id");
+    }
+
+    /**
+     * Performs a POST request on the CategoryRules API endpoint.
+     *
+     * This test uses an invalid CategoryRule to test whether the API returns the correct status code.
+     */
+    @Test
+    public void validSessionInvalidCategoryRulesCreateTest() {
+        given()
+                .header("X-session-ID", sessionId)
+                .body(invalidCategoryRule)
+                .post("/categoryRules")
+                .then()
+                .assertThat()
+                .statusCode(405);
+    }
+
+    @Test
+    public void invalidSessionValidCategoryRulesCreateTest() {
+        given()
+                .body(validCategoryRule)
+                .post("/categoryRules")
+                .then()
+                .assertThat()
+                .statusCode(401);
+    }
 
 
 }
