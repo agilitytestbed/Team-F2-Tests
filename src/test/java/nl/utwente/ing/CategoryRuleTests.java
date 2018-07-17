@@ -24,6 +24,8 @@
  */
 package nl.utwente.ing;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,6 +35,7 @@ import java.nio.file.Paths;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchema;
+import static org.junit.Assert.assertEquals;
 
 public class CategoryRuleTests {
 
@@ -48,6 +51,8 @@ public class CategoryRuleTests {
     private static Integer transactionId;
     private Integer categoryRuleId;
 
+    private JsonParser parser = new JsonParser();
+
     private static String  validCategoryRule = "{\n" +
             "  \"description\": \"University of Twente\",\n" +
             "  \"iBAN\": \"NL39RABO0300065264\",\n" +
@@ -55,13 +60,6 @@ public class CategoryRuleTests {
             "  \"category_id\": 0,\n" +
             "  \"applyOnHistory\": true\n" +
             "}";
-    private static String invalidCategoryRule = "{\n" +
-            "  \"description\": \"University of Twente\",\n" +
-            "  \"iBAN\": \"NL39RABO0300065264\",\n" +
-            "  \"type\": \"deposit\",\n" +
-            "  \"applyOnHistory\": true\n" +
-            "}";
-
 
     /**
      * Makes sure all tests share the same session ID by setting sessionId if it does not exist yet.
@@ -128,11 +126,11 @@ public class CategoryRuleTests {
     /**
      * Performs a GET request on the CategoryRules API endpoint.
      *
-     * This test uses a valid session to get all the created categoryRules and checks if it is in a valid format.
+     * This test uses a valid session to get all the created categoryRules and checks if it adheres to the categoryRule format.
      */
     @Test
     public void validSessionCategoryRulesGetTest() {
-        //Make sure there is at least one cateogryRule to retrieve.
+        //Make sure there is at least one categoryRule to retrieve.
         validSessionValidCategoryRulesCreateTest();
 
         given()
@@ -148,7 +146,7 @@ public class CategoryRuleTests {
     /**
      * Performs a GET request on the CategoryRules API endpoint.
      *
-     * This test uses an invalid session to check whether the API returns the correct status code.
+     * This test uses an invalid session to check whether the API result adheres to the categoryRule format.
      */
     @Test
     public void invalidSessionCategoryRulesGetTest() {
@@ -158,6 +156,64 @@ public class CategoryRuleTests {
                 .assertThat()
                 .statusCode(401);
     }
+
+    /**
+     * Performs a GET request on the CategoryRules API endpoint.
+     *
+     * This test uses a valid session and valid categoryRule id to check whether the API result adheres to the categoryRule format.
+     */
+    @Test
+    public void validSessionValidCategoryRulesIdGetTest() {
+        validSessionValidCategoryRulesCreateTest();
+
+        JsonElement original = parser.parse(validCategoryRule);
+
+        JsonElement response = parser.parse(given()
+                .header("X-session-ID", sessionId)
+                .get(String.format("/categoryRules/%d", categoryRuleId))
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body(matchesJsonSchema(CATEGORY_RULE_SCHEMA))
+                .extract()
+                .response()
+                .getBody()
+                .asString());
+
+        JsonElement responseWithoutId = response.getAsJsonObject().remove("id");
+
+        assertEquals(responseWithoutId, original);
+    }
+
+    /**
+     * Performs a GET request on the CategoryRules API endpoint.
+     *
+     * This test uses an invalid session and valid categoryRule id to check whether the API result adheres to the categoryRule format.
+     */
+    @Test
+    public void invalidSessionValidCategoryRulesIdGetTest() {
+        given()
+                .get(String.format("/categoryRules/%d", categoryRuleId))
+                .then()
+                .assertThat()
+                .statusCode(401);
+    }
+
+    /**
+     * Performs a GET request on the CategoryRules API endpoint.
+     *
+     * This test uses a valid session and invalid categoryRule id to check whether the API result adheres to the categoryRule format.
+     */
+    @Test
+    public void validSessionInvalidCategoryRulesIdGetTest() {
+        given()
+                .header("X-session-ID", sessionId)
+                .get(String.format("/categoryRules/%d", categoryRuleId))
+                .then()
+                .assertThat()
+                .statusCode(404);
+    }
+
 
     /*
      *  Tests related to POST requests on the /categoryRules API endpoint.
@@ -186,10 +242,16 @@ public class CategoryRuleTests {
     /**
      * Performs a POST request on the CategoryRules API endpoint.
      *
-     * This test uses an invalid CategoryRule to test whether the API returns the correct status code.
+     * This test uses an invalid CategoryRule to test whether the API result adheres to the categoryRule format.
      */
     @Test
     public void validSessionInvalidCategoryRulesCreateTest() {
+        String invalidCategoryRule = "{\n" +
+                "  \"description\": \"University of Twente\",\n" +
+                "  \"iBAN\": \"NL39RABO0300065264\",\n" +
+                "  \"type\": \"deposit\",\n" +
+                "  \"applyOnHistory\": true\n" +
+                "}";
         given()
                 .header("X-session-ID", sessionId)
                 .body(invalidCategoryRule)
@@ -199,6 +261,11 @@ public class CategoryRuleTests {
                 .statusCode(405);
     }
 
+    /**
+     * Performs a POST request on the CategoryRules API endpoint.
+     *
+     * This test uses an invalid session to test whether the API result adheres to the categoryRule format.
+     */
     @Test
     public void invalidSessionValidCategoryRulesCreateTest() {
         given()
@@ -209,5 +276,100 @@ public class CategoryRuleTests {
                 .statusCode(401);
     }
 
+    /*
+     *  Tests related to PUT requests on the /categoryRules API endpoint.
+     *  API Documentation: https://app.swaggerhub.com/apis/djhuistra/INGHonours-CategoryRules/1.1.0#/categoryRules/updateCategoryRuleById
+     */
+    /**
+     *  Performs a PUT request on the CategoryRules API endpoint.
+     *
+     *  This test uses a valid session to check whether the API result adheres to the categoryRule format.
+     */
+    @Test
+    public void validSessionValidCategoryRulesUpdateTest() {
+        validSessionValidCategoryRulesCreateTest();
 
+        String validCategoryRule2 = "{\n" +
+                "  \"description\": \"University of Twente\",\n" +
+                "  \"iBAN\": \"NL39RABO0300065264\",\n" +
+                "  \"type\": \"withdrawal\",\n" +
+                "  \"category_id\": 0,\n" +
+                "  \"applyOnHistory\": true\n" +
+                "}";
+
+        JsonElement original = parser.parse(validCategoryRule2);
+
+        JsonElement response = parser.parse(given()
+                .header("X-session-ID", sessionId)
+                .body(validCategoryRule2)
+                .put(String.format("/categoryRules/%d", categoryRuleId))
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body(matchesJsonSchema(CATEGORY_RULE_SCHEMA))
+                .extract()
+                .response()
+                .getBody()
+                .asString());
+
+        JsonElement responseWithoutId = response.getAsJsonObject().remove("id");
+
+        assertEquals(responseWithoutId, original);
+    }
+
+    /**
+     *  Performs a PUT request on the CategoryRules API endpoint.
+     *
+     *  This test uses a valid session and invalid CategoryRule format to check whether the API result adheres to the categoryRule format.
+     */
+    @Test
+    public void validSessionInvalidCategoryRulesUpdateTest() {
+        validSessionValidCategoryRulesCreateTest();
+
+        String invalidCategoryRule = "{\n" +
+                "  \"description\": \"University of Twente\",\n" +
+                "  \"type\": \"withdrawal\",\n" +
+                "  \"category_id\": 0,\n" +
+                "  \"applyOnHistory\": true\n" +
+                "}";
+
+        given()
+                .header("X-session-ID", sessionId)
+                .body(invalidCategoryRule)
+                .put(String.format("/categoryRules/%d", categoryRuleId))
+                .then()
+                .assertThat()
+                .statusCode(405);
+    }
+
+    /**
+     *  Performs a PUT request on the CategoryRules API endpoint.
+     *
+     *  This test uses an invalid session and valid CategoryRule format to check whether the API result adheres to the categoryRule format.
+     */
+    @Test
+    public void invalidSessionValidCategoryRulesUpdateTest() {
+        given()
+                .body(validCategoryRule)
+                .put(String.format("/categoryRules/%d", categoryRuleId))
+                .then()
+                .assertThat()
+                .statusCode(401);
+    }
+
+    /**
+     *  Performs a PUT request on the CategoryRules API endpoint.
+     *
+     *  This test uses a valid session and invalid CategoryRule id to check whether the API result adheres to the categoryRule format.
+     */
+    @Test
+    public void validSessionInvalidCategoryRulesIdUpdateTest() {
+        given()
+                .header("X-session-ID", sessionId)
+                .body(validCategoryRule)
+                .put(String.format("/categoryRules/%d", categoryRuleId))
+                .then()
+                .assertThat()
+                .statusCode(404);
+    }
 }
