@@ -1,0 +1,8 @@
+{
+  "title": "Category rule set",
+  "type": "array",
+  "category-rules": {
+    "type": "object",
+    "$ref": "file:src/test/java/nl/utwente/ing/schemas/categoryrules/category-rule.json"
+  }
+}

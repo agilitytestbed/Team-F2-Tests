@@ -1,0 +1,32 @@
+{
+  "title": "CategoryRule",
+  "type": "object",
+  "properties": {
+    "id": {
+      "description": "The unique identifier for the category rule",
+      "type": "integer"
+    },
+    "description": {
+      "description": "The string regex to match in the transaction",
+      "type": "string"
+    },
+    "iBAN": {
+      "description": "The iBAN to match in the transaction",
+      "type": "string"
+    },
+    "type": {
+      "description" : "The type to match this category rule to (either deposit or withdrawal)",
+      "type": "string",
+      "enum": ["deposit", "withdrawal"]
+    },
+    "category_id": {
+      "description": "The id of the category to match to all the found results",
+      "type": "integer"
+    },
+    "applyOnHistory": {
+      "description" : "Boolean to specify whether to apply to all the transactions in the system",
+      "type" : "boolean"
+    }
+  },
+  "required": ["id", "description", "iBAN", "type", "category_id", "applyOnHistory"]
+}
