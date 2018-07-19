@@ -61,6 +61,7 @@ public class TransactionTests {
                     "\"amount\": 213.12, " +
                     "\"externalIBAN\": \"string\", " +
                     "\"type\": \"deposit\", " +
+                    "\"description\": \"test\", " +
                     "\"category\": {" +
                     "    \"id\": %d," +
                     "    \"name\": \"" + TEST_CATEGORY_NAME + "\""+
@@ -139,6 +140,8 @@ public class TransactionTests {
      */
     @Test
     public void validSessionTransactionsGetTest() {
+        validSessionValidTransactionPostTest();
+
         int size = given()
                 .header("X-session-ID", sessionId)
                 .get("api/v1/transactions")
@@ -170,6 +173,7 @@ public class TransactionTests {
                 "\"amount\": 23.53, " +
                 "\"externalIBAN\": \"something\", " +
                 "\"type\": \"deposit\", " +
+                "\"description\" : \"test\", " +
                 "\"category\": {" +
                 "    \"id\": %d," +
                 "    \"name\": \"" + TEST_CATEGORY_NAME + "\"" +
@@ -436,6 +440,7 @@ public class TransactionTests {
                 "\"date\": \"2018-03-25T12:49:04.749Z\", " +
                 "\"amount\": \"213.04\", " +
                 "\"externalIBAN\": \"DIFFERENT\", " +
+                "\"description\" : \"testtesttest\"," +
                 "\"type\": \"deposit\" }";
 
         String response = given()
@@ -491,7 +496,8 @@ public class TransactionTests {
                 "\"date\": \"2018-03-25T12:49:04.749Z\", " +
                 "\"amount\": \"213.04\", " +
                 "\"externalIBAN\": \"DIFFERENT\", " +
-                "\"type\": \"deposit\" }";
+                "\"type\": \"deposit\"," +
+                "\"description\": \"asiodjf\" }";
 
         given()
                 .header("X-session-ID", Util.getSessionID())

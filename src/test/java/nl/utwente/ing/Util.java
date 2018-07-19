@@ -76,6 +76,7 @@ public class Util {
                         "\"amount\": 213.12, " +
                         "\"externalIBAN\": \"string\", " +
                         "\"type\": \"deposit\", " +
+                        "\"description\": \"test\"," +
                         "\"category\": {" +
                         "    \"id\": " + categoryId + "," +
                         "    \"name\": \"" + categoryName + "\""+
@@ -85,7 +86,7 @@ public class Util {
         return given()
                 .header("X-session-ID", sessionId)
                 .body(testTransaction)
-                .post("/transactions")
+                .post("/api/v1/transactions")
                 .then()
                 .extract()
                 .response()
@@ -104,5 +105,11 @@ public class Util {
         given()
                 .header("X-session-ID", sessionId)
                 .delete(String.format("api/v1/categories/%d", id));
+    }
+
+    public static void deleteTestCategoryRule(int id, String sessionId) {
+        given()
+                .header("X-session-ID", sessionId)
+                .delete(String.format("api/v1/categoryrules/%d", id));
     }
 }
