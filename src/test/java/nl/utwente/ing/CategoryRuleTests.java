@@ -88,6 +88,7 @@ public class CategoryRuleTests {
     /**
      * Makes sure the test data is deleted after the tests are run.
      */
+    @After
     public void deleteTestData() {
         getTestSession();
 

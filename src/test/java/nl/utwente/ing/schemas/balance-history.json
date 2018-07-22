@@ -1,0 +1,28 @@
+{
+  "title" : "Balance history format",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "open": {
+        "type": "integer"
+      },
+      "close": {
+        "type": "integer"
+      },
+      "high": {
+        "type": "integer"
+      },
+      "low": {
+        "type": "integer"
+      },
+      "volume": {
+        "type": "integer"
+      },
+      "timestamp": {
+        "type": "integer"
+      }
+    }
+  }
+}
+
