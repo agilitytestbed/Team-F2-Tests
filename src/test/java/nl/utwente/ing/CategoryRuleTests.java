@@ -26,9 +26,7 @@ package nl.utwente.ing;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 import java.net.URI;
 import java.nio.file.Paths;
@@ -51,26 +49,18 @@ public class CategoryRuleTests {
     private static Integer categoryId;
     private static Integer category2Id;
     private static Integer transactionId;
-    private Integer categoryRuleId;
+    private static Integer categoryRuleId;
 
     private JsonParser parser = new JsonParser();
 
     /**
-     * Makes sure all tests share the same session ID by setting sessionId if it does not exist yet.
+     * Makes sure test data is present to test with.
      */
-    @Before
-    public void getTestSession() {
+    @BeforeClass
+    public static void setTestData() {
         if (sessionId == null) {
             sessionId = Util.getSessionID();
         }
-    }
-
-    /**
-     * Makes sure test data is present to test with.
-     */
-    @Before
-    public void setTestData() {
-        getTestSession();
 
         if (categoryId == null) {
             categoryId = Util.createTestCategory(TEST_CATEGORY_NAME, sessionId);
@@ -88,9 +78,8 @@ public class CategoryRuleTests {
     /**
      * Makes sure the test data is deleted after the tests are run.
      */
-    public void deleteTestData() {
-        getTestSession();
-
+    @AfterClass
+    public static void deleteTestData() {
         if (categoryRuleId != null) {
             Util.deleteTestCategoryRule(categoryRuleId, sessionId);
         }
