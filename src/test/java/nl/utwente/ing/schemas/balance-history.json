@@ -5,19 +5,19 @@
     "type": "object",
     "properties": {
       "open": {
-        "type": "integer"
+        "type": "number"
       },
       "close": {
-        "type": "integer"
+        "type": "number"
       },
       "high": {
-        "type": "integer"
+        "type": "number"
       },
       "low": {
-        "type": "integer"
+        "type": "number"
       },
       "volume": {
-        "type": "integer"
+        "type": "number"
       },
       "timestamp": {
         "type": "integer"

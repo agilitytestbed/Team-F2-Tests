@@ -6,12 +6,14 @@ import org.junit.*;
 
 import java.net.URI;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchema;
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 public class BalanceHistoryTests {
@@ -22,7 +24,7 @@ public class BalanceHistoryTests {
     private static final String TRANSACTION_INPUT_FORMAT =
             "{" +
                     "\"date\": \"%s\", " +
-                    "\"amount\": %f, " +
+                    "\"amount\": %s, " +
                     "\"externalIBAN\": \"NL05INGB0374182583\", " +
                     "\"type\": \"%s\", " +
                     "\"description\": \"test\"" +
@@ -111,13 +113,15 @@ public class BalanceHistoryTests {
     public void validSessionValidTransactionsBalanceHistoryTest() {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MONTH, -3);
-        insertTransaction(sessionId, 20000L, DATE_FORMAT.format(calendar.getTime()), "deposit");
+        insertTransaction(sessionId, "200.00", DATE_FORMAT.format(calendar.getTime()), "deposit");
 
         calendar = Calendar.getInstance();
-        insertTransaction(sessionId, 50000L, DATE_FORMAT.format(calendar.getTime()), "deposit");
+        calendar.add(Calendar.HOUR, -2);
+        insertTransaction(sessionId, "500.00", DATE_FORMAT.format(calendar.getTime()), "deposit");
 
         calendar = Calendar.getInstance();
-        insertTransaction(sessionId, 10000L, DATE_FORMAT.format(calendar.getTime()), "withdrawal");
+        calendar.add(Calendar.HOUR, -2);
+        insertTransaction(sessionId, "100.00", DATE_FORMAT.format(calendar.getTime()), "withdrawal");
 
         JsonPath response = given()
                 .header("X-session-ID", sessionId)
@@ -130,14 +134,13 @@ public class BalanceHistoryTests {
                 .extract()
                 .response()
                 .getBody()
-                .jsonPath()
-                .get("[0]");
+                .jsonPath();
 
-        assertThat(response.get("open"), equalTo(200.00));
-        assertThat(response.get("close"), equalTo(600.00));
-        assertThat(response.get("high"), equalTo(700.00));
-        assertThat(response.get("low"), equalTo(200.00));
-        assertThat(response.get("volume"), equalTo(600.00));
+        assertEquals( 200.00, response.getDouble("[0].open"), 0.01);
+        assertEquals(600.00, response.getDouble("[0].close"), 0.01);
+        assertEquals(700.00, response.getDouble("[0].high"), 0.01);
+        assertEquals(200.00, response.getDouble("[0].low"), 0.01);
+        assertEquals(600.00, response.getDouble("[0].volume"), 0.01);
     }
 
     /**
@@ -150,18 +153,20 @@ public class BalanceHistoryTests {
     public void validSessionValidTransactionsValidIntervalBalanceHistoryTest() {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MONTH, -1);
-        insertTransaction(sessionId, 40000L, DATE_FORMAT.format(calendar.getTime()), "deposit");
+        insertTransaction(sessionId, "400.00", DATE_FORMAT.format(calendar.getTime()), "deposit");
 
         calendar = Calendar.getInstance();
         calendar.add(Calendar.MONTH, -1);
-        insertTransaction(sessionId, 10000L, DATE_FORMAT.format(calendar.getTime()), "withdrawal");
+        insertTransaction(sessionId, "100.00", DATE_FORMAT.format(calendar.getTime()), "withdrawal");
 
 
         calendar = Calendar.getInstance();
-        insertTransaction(sessionId, 20000L, DATE_FORMAT.format(calendar.getTime()), "deposit");
+        calendar.add(Calendar.HOUR, -2);
+        insertTransaction(sessionId, "200.00", DATE_FORMAT.format(calendar.getTime()), "deposit");
 
         calendar = Calendar.getInstance();
-        insertTransaction(sessionId, 5000L, DATE_FORMAT.format(calendar.getTime()), "withdrawal");
+        calendar.add(Calendar.HOUR, -2);
+        insertTransaction(sessionId, "50.00", DATE_FORMAT.format(calendar.getTime()), "withdrawal");
 
         JsonPath response = given()
                 .header("X-session-ID", sessionId)
@@ -175,31 +180,120 @@ public class BalanceHistoryTests {
                 .extract()
                 .response()
                 .getBody()
-                .jsonPath()
-                .get("[0]");
+                .jsonPath();
 
-        System.out.println(response.toString());
-        assertThat(response.get("open"), equalTo(300.00));
-        assertThat(response.get("close"), equalTo(450.00));
-        assertThat(response.get("high"), equalTo(500.00));
-        assertThat(response.get("low"), equalTo(300.00));
-        assertThat(response.get("volume"), equalTo(250.00));
+        assertEquals( 300.00, response.getDouble("[0].open"), 0.01);
+        assertEquals(450.00, response.getDouble("[0].close"), 0.01);
+        assertEquals(500.00, response.getDouble("[0].high"), 0.01);
+        assertEquals(300.00, response.getDouble("[0].low"), 0.01);
+        assertEquals(250.00, response.getDouble("[0].volume"), 0.01);
+    }
+
+    /**
+     * Performs a GET request on the balanceHistory endpoint.
+     *
+     * This test uses a valid session with transactions  with multiple intervals to check whether the API result
+     * adheres to the balanceHistory format.
+     */
+    @Test
+    public void validSessionValidTransactionsValidIntervalMultipleIntervalsBalanceHistoryTest() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.YEAR, -10);
+        insertTransaction(sessionId, "400.00", DATE_FORMAT.format(calendar.getTime()), "deposit");
+
+        calendar = Calendar.getInstance();
+        calendar.add(Calendar.YEAR, -10);
+        insertTransaction(sessionId, "100.00", DATE_FORMAT.format(calendar.getTime()), "withdrawal");
+
+        calendar = Calendar.getInstance();
+        calendar.add(Calendar.YEAR, -4);
+        calendar.add(Calendar.HOUR, -2);
+        insertTransaction(sessionId, "200.00", DATE_FORMAT.format(calendar.getTime()), "deposit");
+
+        calendar = Calendar.getInstance();
+        calendar.add(Calendar.YEAR, -4);
+        calendar.add(Calendar.HOUR, -2);
+        insertTransaction(sessionId, "50.00", DATE_FORMAT.format(calendar.getTime()), "withdrawal");
+
+        calendar = Calendar.getInstance();
+        calendar.add(Calendar.YEAR, -3);
+        calendar.add(Calendar.HOUR, -2);
+        insertTransaction(sessionId, "200.00", DATE_FORMAT.format(calendar.getTime()), "deposit");
+
+        calendar = Calendar.getInstance();
+        calendar.add(Calendar.YEAR, -3);
+        calendar.add(Calendar.HOUR, -2);
+        insertTransaction(sessionId, "50.00", DATE_FORMAT.format(calendar.getTime()), "withdrawal");
+
+        calendar = Calendar.getInstance();
+        calendar.add(Calendar.YEAR, -2);
+        calendar.add(Calendar.HOUR, -2);
+        insertTransaction(sessionId, "200.00", DATE_FORMAT.format(calendar.getTime()), "deposit");
+
+        calendar = Calendar.getInstance();
+        calendar.add(Calendar.YEAR, -2);
+        calendar.add(Calendar.HOUR, -2);
+        insertTransaction(sessionId, "50.00", DATE_FORMAT.format(calendar.getTime()), "withdrawal");
+
+        calendar = Calendar.getInstance();
+        calendar.add(Calendar.HOUR, -2);
+        insertTransaction(sessionId, "200.00", DATE_FORMAT.format(calendar.getTime()), "deposit");
+
+        calendar = Calendar.getInstance();
+        calendar.add(Calendar.HOUR, -2);
+        insertTransaction(sessionId, "50.00", DATE_FORMAT.format(calendar.getTime()), "withdrawal");
+
+        JsonPath response = given()
+                .header("X-session-ID", sessionId)
+                .queryParam("interval", "year")
+                .queryParam("intervals", 5)
+                .get("/api/v1/balance/history")
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body(matchesJsonSchema(BALANCE_HISTORY_SCHEMA))
+                .extract()
+                .response()
+                .getBody()
+                .jsonPath();
+
+        assertEquals( 300.00, response.getDouble("[0].open"), 0.01);
+        assertEquals(450.00, response.getDouble("[0].close"), 0.01);
+        assertEquals(500.00, response.getDouble("[0].high"), 0.01);
+        assertEquals(300.00, response.getDouble("[0].low"), 0.01);
+        assertEquals(250.00, response.getDouble("[0].volume"), 0.01);
+
+        assertEquals( 450.00, response.getDouble("[1].open"), 0.01);
+        assertEquals(600.00, response.getDouble("[1].close"), 0.01);
+        assertEquals(650.00, response.getDouble("[1].high"), 0.01);
+        assertEquals(450.00, response.getDouble("[1].low"), 0.01);
+        assertEquals(250.00, response.getDouble("[1].volume"), 0.01);
+
+        assertEquals( 600.00, response.getDouble("[2].open"), 0.01);
+        assertEquals(750.00, response.getDouble("[2].close"), 0.01);
+        assertEquals(800.00, response.getDouble("[2].high"), 0.01);
+        assertEquals(600.00, response.getDouble("[2].low"), 0.01);
+        assertEquals(250.00, response.getDouble("[2].volume"), 0.01);
+
+        assertEquals( 750.00, response.getDouble("[4].open"), 0.01);
+        assertEquals(900.00, response.getDouble("[4].close"), 0.01);
+        assertEquals(950.00, response.getDouble("[4].high"), 0.01);
+        assertEquals(750.00, response.getDouble("[4].low"), 0.01);
+        assertEquals(250.00, response.getDouble("[4].volume"), 0.01);
     }
 
 
-    /**
-     * Helper function to accompany easy transaction creation.
-     * @param sessionId The session ID which needs to be used to create the transaction.
-     * @param amount Amount the transaction needs to be.
-     * @param date Date which the transaction was done.
-     * @param type Either deposit or withdrawal.
-     */
-    private void insertTransaction(String sessionId, Long amount, String date, String type) {
-        System.out.println(String.format(TRANSACTION_INPUT_FORMAT, date, amount / 100.0, type));
-
+        /**
+         * Helper function to accompany easy transaction creation.
+         * @param sessionId The session ID which needs to be used to create the transaction.
+         * @param amount Amount the transaction needs to be.
+         * @param date Date which the transaction was done.
+         * @param type Either deposit or withdrawal.
+         */
+    private void insertTransaction(String sessionId, String amount, String date, String type) {
         transactions.add(given()
                 .header("X-session-ID", sessionId)
-                .body(String.format(TRANSACTION_INPUT_FORMAT, date, amount / 100.0, type))
+                .body(String.format(TRANSACTION_INPUT_FORMAT, date, amount, type))
                 .post("/api/v1/transactions")
                 .then()
                 .assertThat()
