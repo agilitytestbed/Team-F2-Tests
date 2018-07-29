@@ -70,7 +70,8 @@ public class CategoryRuleTests {
         }
 
         if (transactionId == null) {
-            transactionId = Util.createTestTransaction(categoryId, TEST_CATEGORY_NAME, sessionId);
+            transactionId = Util.insertTransaction(sessionId, "50.00", null, "withdrawal", categoryId,
+                    TEST_CATEGORY_NAME);
         }
     }
 

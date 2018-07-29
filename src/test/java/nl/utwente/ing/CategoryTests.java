@@ -38,7 +38,7 @@ import static org.junit.Assert.assertEquals;
 
 public class CategoryTests {
 
-    private static final Path CATEGORY_SCHEMA_PATH = Paths.get("src/test/java/nl/utwente/ing/schemas/categories" +
+    static final Path CATEGORY_SCHEMA_PATH = Paths.get("src/test/java/nl/utwente/ing/schemas/categories" +
             "/category.json");
     private static final Path CATEGORY_LIST_SCHEMA_PATH = Paths.get("src/test/java/nl/utwente/ing/schemas/categories/category-list.json");
 

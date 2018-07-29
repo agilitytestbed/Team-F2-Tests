@@ -26,21 +26,24 @@ package nl.utwente.ing;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.post;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchema;
 
-public class Util {
+class Util {
 
     private static final Path SESSION_SCHEMA_PATH = Paths.get("src/test/java/nl/utwente/ing/schemas/session.json");
+    static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
     /**
      * Accesses the session API endpoint to generate a new session ID.
      *
      * @return a newly generated session ID
      */
-    public static String getSessionID() {
+    static String getSessionID() {
         return post("api/v1/sessions")
                 .then()
                 .assertThat()
@@ -53,7 +56,7 @@ public class Util {
                 .getString("id");
     }
 
-    public static int createTestCategory(String name, String sessionId) {
+    static int createTestCategory(String name, String sessionId) {
         return given()
                 .header("X-session-ID", sessionId)
                 .body(String.format("{\"name\": \"%s\"}", name))
@@ -69,25 +72,40 @@ public class Util {
                 .getInt("id");
     }
 
-    public static int createTestTransaction(Integer categoryId, String categoryName, String sessionId) {
-        String testTransaction =
-                "{" +
-                        "\"date\": \"1889-04-20T19:45:04.030Z\", " +
-                        "\"amount\": 213.12, " +
-                        "\"externalIBAN\": \"string\", " +
-                        "\"type\": \"deposit\", " +
-                        "\"description\": \"test\"," +
+    /**
+     * Helper function to accompany easy transaction creation.
+     * @param sessionId The session ID which needs to be used to create the transaction.
+     * @param amount Amount the transaction needs to be.
+     * @param date Date which the transaction was done.
+     * @param type Either deposit or withdrawal.
+     * @return the ID of the newly created transaction.
+     */
+    static int insertTransaction(String sessionId, String amount, String date, String type, Integer categoryId,
+                                 String categoryName) {
+        if (date == null) date = DATE_FORMAT.format(Calendar.getInstance());
+
+        String TRANSACTION_INPUT_FORMAT =
+            "{" +
+                "\"date\": \"%s\", " +
+                "\"amount\": %s, " +
+                "\"externalIBAN\": \"NL05INGB0374182583\", " +
+                "\"type\": \"%s\", " +
+                "\"description\": \"test\"" +
+                (categoryId == null || categoryName == null ? "" :
+                        "," +
                         "\"category\": {" +
                         "    \"id\": " + categoryId + "," +
                         "    \"name\": \"" + categoryName + "\""+
-                        "  }" +
-                        "}";
+                        "}"
+                ) +
+            "}";
 
         return given()
                 .header("X-session-ID", sessionId)
-                .body(testTransaction)
+                .body(String.format(TRANSACTION_INPUT_FORMAT, date, amount, type))
                 .post("/api/v1/transactions")
                 .then()
+                .statusCode(201)
                 .extract()
                 .response()
                 .getBody()
@@ -95,19 +113,19 @@ public class Util {
                 .getInt("id");
     }
 
-    public static void deleteTestTransaction(int id, String sessionId) {
+    static void deleteTestTransaction(int id, String sessionId) {
         given()
                 .header("X-session-ID", sessionId)
                 .delete(String.format("api/v1/transactions/%d", id));
     }
 
-    public static void deleteTestCategory(int id, String sessionId) {
+    static void deleteTestCategory(int id, String sessionId) {
         given()
                 .header("X-session-ID", sessionId)
                 .delete(String.format("api/v1/categories/%d", id));
     }
 
-    public static void deleteTestCategoryRule(int id, String sessionId) {
+    static void deleteTestCategoryRule(int id, String sessionId) {
         given()
                 .header("X-session-ID", sessionId)
                 .delete(String.format("api/v1/categoryrules/%d", id));
