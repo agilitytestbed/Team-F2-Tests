@@ -82,7 +82,7 @@ class Util {
      */
     static int insertTransaction(String sessionId, String amount, String date, String type, Integer categoryId,
                                  String categoryName) {
-        if (date == null) date = DATE_FORMAT.format(Calendar.getInstance());
+        if (date == null) date = DATE_FORMAT.format(Calendar.getInstance().getTime());
 
         String TRANSACTION_INPUT_FORMAT =
             "{" +

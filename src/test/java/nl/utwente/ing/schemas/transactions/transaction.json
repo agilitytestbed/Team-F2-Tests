@@ -36,5 +36,5 @@
       }
     }
   },
-  "required": ["id", "date", "amount", "externalIBAN", "type", "category"]
+  "required": ["id", "date", "amount", "externalIBAN", "type"]
 }
