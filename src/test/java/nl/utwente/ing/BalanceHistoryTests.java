@@ -1,35 +1,49 @@
+/*
+ * Copyright (c) 2018, Joost Prins <github.com/joostprins> All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 package nl.utwente.ing;
 
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
-import org.junit.*;
+import org.junit.After;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.net.URI;
 import java.nio.file.Paths;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchema;
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
 
 public class BalanceHistoryTests {
 
     private static final URI BALANCE_HISTORY_SCHEMA = Paths.get
             ("src/test/java/nl/utwente/ing/schemas/balance-history.json").toAbsolutePath().toUri();
 
-    private static final String TRANSACTION_INPUT_FORMAT =
-            "{" +
-                    "\"date\": \"%s\", " +
-                    "\"amount\": %s, " +
-                    "\"externalIBAN\": \"NL05INGB0374182583\", " +
-                    "\"type\": \"%s\", " +
-                    "\"description\": \"test\"" +
-                    "}";
-    private static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
     private static String sessionId;
 
@@ -113,15 +127,15 @@ public class BalanceHistoryTests {
     public void validSessionValidTransactionsBalanceHistoryTest() {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MONTH, -3);
-        insertTransaction(sessionId, "200.00", DATE_FORMAT.format(calendar.getTime()), "deposit");
+        insertTransaction(sessionId, "200.00", Util.DATE_FORMAT.format(calendar.getTime()), "deposit");
 
         calendar = Calendar.getInstance();
         calendar.add(Calendar.HOUR, -2);
-        insertTransaction(sessionId, "500.00", DATE_FORMAT.format(calendar.getTime()), "deposit");
+        insertTransaction(sessionId, "500.00", Util.DATE_FORMAT.format(calendar.getTime()), "deposit");
 
         calendar = Calendar.getInstance();
         calendar.add(Calendar.HOUR, -2);
-        insertTransaction(sessionId, "100.00", DATE_FORMAT.format(calendar.getTime()), "withdrawal");
+        insertTransaction(sessionId, "100.00", Util.DATE_FORMAT.format(calendar.getTime()), "withdrawal");
 
         JsonPath response = given()
                 .header("X-session-ID", sessionId)
@@ -153,20 +167,20 @@ public class BalanceHistoryTests {
     public void validSessionValidTransactionsValidIntervalBalanceHistoryTest() {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MONTH, -1);
-        insertTransaction(sessionId, "400.00", DATE_FORMAT.format(calendar.getTime()), "deposit");
+        insertTransaction(sessionId, "400.00", Util.DATE_FORMAT.format(calendar.getTime()), "deposit");
 
         calendar = Calendar.getInstance();
         calendar.add(Calendar.MONTH, -1);
-        insertTransaction(sessionId, "100.00", DATE_FORMAT.format(calendar.getTime()), "withdrawal");
+        insertTransaction(sessionId, "100.00", Util.DATE_FORMAT.format(calendar.getTime()), "withdrawal");
 
 
         calendar = Calendar.getInstance();
         calendar.add(Calendar.HOUR, -2);
-        insertTransaction(sessionId, "200.00", DATE_FORMAT.format(calendar.getTime()), "deposit");
+        insertTransaction(sessionId, "200.00", Util.DATE_FORMAT.format(calendar.getTime()), "deposit");
 
         calendar = Calendar.getInstance();
         calendar.add(Calendar.HOUR, -2);
-        insertTransaction(sessionId, "50.00", DATE_FORMAT.format(calendar.getTime()), "withdrawal");
+        insertTransaction(sessionId, "50.00", Util.DATE_FORMAT.format(calendar.getTime()), "withdrawal");
 
         JsonPath response = given()
                 .header("X-session-ID", sessionId)
@@ -199,49 +213,49 @@ public class BalanceHistoryTests {
     public void validSessionValidTransactionsValidIntervalMultipleIntervalsBalanceHistoryTest() {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.YEAR, -10);
-        insertTransaction(sessionId, "400.00", DATE_FORMAT.format(calendar.getTime()), "deposit");
+        insertTransaction(sessionId, "400.00", Util.DATE_FORMAT.format(calendar.getTime()), "deposit");
 
         calendar = Calendar.getInstance();
         calendar.add(Calendar.YEAR, -10);
-        insertTransaction(sessionId, "100.00", DATE_FORMAT.format(calendar.getTime()), "withdrawal");
+        insertTransaction(sessionId, "100.00", Util.DATE_FORMAT.format(calendar.getTime()), "withdrawal");
 
         calendar = Calendar.getInstance();
         calendar.add(Calendar.YEAR, -4);
         calendar.add(Calendar.HOUR, -2);
-        insertTransaction(sessionId, "200.00", DATE_FORMAT.format(calendar.getTime()), "deposit");
+        insertTransaction(sessionId, "200.00", Util.DATE_FORMAT.format(calendar.getTime()), "deposit");
 
         calendar = Calendar.getInstance();
         calendar.add(Calendar.YEAR, -4);
         calendar.add(Calendar.HOUR, -2);
-        insertTransaction(sessionId, "50.00", DATE_FORMAT.format(calendar.getTime()), "withdrawal");
+        insertTransaction(sessionId, "50.00", Util.DATE_FORMAT.format(calendar.getTime()), "withdrawal");
 
         calendar = Calendar.getInstance();
         calendar.add(Calendar.YEAR, -3);
         calendar.add(Calendar.HOUR, -2);
-        insertTransaction(sessionId, "200.00", DATE_FORMAT.format(calendar.getTime()), "deposit");
+        insertTransaction(sessionId, "200.00", Util.DATE_FORMAT.format(calendar.getTime()), "deposit");
 
         calendar = Calendar.getInstance();
         calendar.add(Calendar.YEAR, -3);
         calendar.add(Calendar.HOUR, -2);
-        insertTransaction(sessionId, "50.00", DATE_FORMAT.format(calendar.getTime()), "withdrawal");
+        insertTransaction(sessionId, "50.00", Util.DATE_FORMAT.format(calendar.getTime()), "withdrawal");
 
         calendar = Calendar.getInstance();
         calendar.add(Calendar.YEAR, -2);
         calendar.add(Calendar.HOUR, -2);
-        insertTransaction(sessionId, "200.00", DATE_FORMAT.format(calendar.getTime()), "deposit");
+        insertTransaction(sessionId, "200.00", Util.DATE_FORMAT.format(calendar.getTime()), "deposit");
 
         calendar = Calendar.getInstance();
         calendar.add(Calendar.YEAR, -2);
         calendar.add(Calendar.HOUR, -2);
-        insertTransaction(sessionId, "50.00", DATE_FORMAT.format(calendar.getTime()), "withdrawal");
+        insertTransaction(sessionId, "50.00", Util.DATE_FORMAT.format(calendar.getTime()), "withdrawal");
 
         calendar = Calendar.getInstance();
         calendar.add(Calendar.HOUR, -2);
-        insertTransaction(sessionId, "200.00", DATE_FORMAT.format(calendar.getTime()), "deposit");
+        insertTransaction(sessionId, "200.00", Util.DATE_FORMAT.format(calendar.getTime()), "deposit");
 
         calendar = Calendar.getInstance();
         calendar.add(Calendar.HOUR, -2);
-        insertTransaction(sessionId, "50.00", DATE_FORMAT.format(calendar.getTime()), "withdrawal");
+        insertTransaction(sessionId, "50.00", Util.DATE_FORMAT.format(calendar.getTime()), "withdrawal");
 
         JsonPath response = given()
                 .header("X-session-ID", sessionId)
@@ -282,27 +296,8 @@ public class BalanceHistoryTests {
         assertEquals(250.00, response.getDouble("[4].volume"), 0.01);
     }
 
-
-        /**
-         * Helper function to accompany easy transaction creation.
-         * @param sessionId The session ID which needs to be used to create the transaction.
-         * @param amount Amount the transaction needs to be.
-         * @param date Date which the transaction was done.
-         * @param type Either deposit or withdrawal.
-         */
     private void insertTransaction(String sessionId, String amount, String date, String type) {
-        transactions.add(given()
-                .header("X-session-ID", sessionId)
-                .body(String.format(TRANSACTION_INPUT_FORMAT, date, amount, type))
-                .post("/api/v1/transactions")
-                .then()
-                .assertThat()
-                .statusCode(201)
-                .extract()
-                .response()
-                .getBody()
-                .jsonPath()
-                .getInt("id"));
+        transactions.add(Util.insertTransaction(sessionId, amount, date, type, null, null));
     }
 }
 

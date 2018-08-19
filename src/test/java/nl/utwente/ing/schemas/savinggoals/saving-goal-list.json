@@ -1,0 +1,8 @@
+{
+  "title": "Saving goal set",
+  "type": "array",
+  "saving-goals": {
+    "type": "object",
+    "$ref": "file:src/test/java/nl/utwente/ing/schemas/savinggoals/saving-goal.json"
+  }
+}
