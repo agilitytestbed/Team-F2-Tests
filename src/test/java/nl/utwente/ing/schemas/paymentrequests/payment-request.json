@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "title": "Payment request object",
+  "properties": {
+    "id": {
+      "type": "integer"
+    },
+    "description": {
+      "type": "string"
+    },
+    "due_date": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "number_of_requests": {
+      "type": "integer"
+    },
+    "filled": {
+      "type": "boolean"
+    },
+    "transactions": {
+      "$ref": "file:src/test/java/nl/utwente/ing/schemas/transactions/transaction-list.json"
+    }
+  }
+}
