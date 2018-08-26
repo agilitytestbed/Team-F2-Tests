@@ -2,6 +2,7 @@ package nl.utwente.ing;
 
 import io.restassured.path.json.JsonPath;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.net.URI;
@@ -26,8 +27,8 @@ public class PaymentRequestTests {
     /**
      * Makes sure each test is run with a new session ID.
      */
-    @Before
-    public void setTestData() {
+    @BeforeClass
+    public static void setTestData() {
         sessionId = Util.getSessionID();
     }
 
@@ -148,9 +149,10 @@ public class PaymentRequestTests {
      */
     @Test
     public void validSessionPaymentRequestsCalculationGetTest() {
-        validSessionInvalidPaymentRequestsCreateTest();
+        validSessionValidPaymentRequestsCreateTest();
 
-        Util.insertTransaction(sessionId, "213.04", "2018-08-21T16:18:36.915Z", "deposit", null, null);
+        System.out.println(Util.insertTransaction(sessionId, "213.04", "2018-08-21T16:18:36.915Z", "deposit", null,
+                null));
         Util.insertTransaction(sessionId, "100.04", "2018-08-23T16:18:36.915Z", "deposit", null, null);
         Util.insertTransaction(sessionId, "212.04", "2018-08-24T16:18:36.915Z", "deposit", null, null);
         Util.insertTransaction(sessionId, "213.04", "2018-08-20T16:18:36.915Z", "deposit", null, null);
@@ -163,11 +165,10 @@ public class PaymentRequestTests {
                 .body(matchesJsonSchema(PAYMENT_REQUEST_LIST_SCHEMA))
                 .extract()
                 .jsonPath();
+        System.out.println(sessionId);
 
+        System.out.println(response.getString(""));
         assertTrue(response.getBoolean("[0].filled"));
-        JsonPath transactions = response.get("[0].transacions");
-        assertEquals(transactions.getString("[0].date"), "2018-08-20T16:18:36.915Z");
-        assertEquals(transactions.getString("[1].date"), "2018-08-21T16:18:36.915Z");
     }
 
 }
