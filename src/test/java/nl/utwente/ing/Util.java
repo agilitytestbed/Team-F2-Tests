@@ -99,7 +99,7 @@ class Util {
                         "}"
                 ) +
             "}";
-
+        System.out.println(String.format(TRANSACTION_INPUT_FORMAT, date, amount, type));
         return given()
                 .header("X-session-ID", sessionId)
                 .body(String.format(TRANSACTION_INPUT_FORMAT, date, amount, type))
