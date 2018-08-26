@@ -2,7 +2,7 @@
   "type": "object",
   "properties": {
     "id": {
-      "type": "integer",
+      "type": "number",
       "description" : "The id of the saving goal"
     },
     "name": {
@@ -10,19 +10,19 @@
       "description" : "The name of the saving goal"
     },
     "goal": {
-      "type": "integer",
+      "type": "number",
       "description" : "The total amount of money the saving goals needs to achieve"
     },
     "savePerMonth": {
-      "type": "integer",
+      "type": "number",
       "description" : "The amount of money that needs to be put aside from the acount each month"
     },
     "minBalanceRequired": {
-      "type": "integer",
+      "type": "number",
       "description" : "The minimal balance the account needs to have in order to set aside money for the saving goal"
     },
     "balance": {
-      "type": "integer",
+      "type": "number",
       "description" : "The current amount of money that is stored in the saving goal"
     }
   }

@@ -67,7 +67,7 @@ public class SavingGoalsTests {
     public void validSessionValidSavingGoalsCreateTest() {
         String validSavingGoal = "{\n" +
                 "  \"name\": \"China holiday\",\n" +
-                "  \"goal\": 5000,\n" +
+                "  \"goal\": 450,\n" +
                 "  \"savePerMonth\": 250,\n" +
                 "  \"minBalanceRequired\": 0\n" +
                 "}";
@@ -175,14 +175,14 @@ public class SavingGoalsTests {
         calendar.add(Calendar.MONTH, -1);
 
         //Insert base balance into the API
-        Util.insertTransaction(sessionId, "1500.00", Util.DATE_FORMAT.format(calendar), "deposit", null, null);
+        Util.insertTransaction(sessionId, "1500.00", Util.DATE_FORMAT.format(calendar.getTime()), "deposit", null, null);
 
         //Insert the saving goal into the API
         validSessionValidSavingGoalsCreateTest();
 
         //Withdraw money from the session to update internal time of the API
         calendar = Calendar.getInstance();
-        Util.insertTransaction(sessionId, "50.00", Util.DATE_FORMAT.format(calendar), "withdrawal", null, null);
+        Util.insertTransaction(sessionId, "50.00", Util.DATE_FORMAT.format(calendar.getTime()), "withdrawal", null, null);
 
         //Check to see if the savingGoal balance is updated to withdrawal of 1 month
         JsonPath response = given()
@@ -192,8 +192,80 @@ public class SavingGoalsTests {
                 .body(matchesJsonSchema(SAVING_GOAL_LIST_SCHEMA))
                 .extract()
                 .jsonPath();
+        assertEquals(250, response.getInt("[0].balance"));
+    }
 
-        assertEquals(250, response.get("[0].balance"), 0.01);
+    @Test
+    public void validSessionSavingGoalsCalculationGetBalanceHistoryTest() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MONTH, -3);
+        calendar.add(Calendar.HOUR, -2);
+
+        //Insert base balance into the API
+        Util.insertTransaction(sessionId, "1500.00", Util.DATE_FORMAT.format(calendar.getTime()), "deposit", null, null);
+
+        //Insert the saving goal into the API
+        validSessionValidSavingGoalsCreateTest();
+
+        //Withdraw money from the session to update internal time of the API
+        calendar = Calendar.getInstance();
+        calendar.add(Calendar.MONTH, -2);
+        calendar.add(Calendar.HOUR, -2);
+        Util.insertTransaction(sessionId, "50.00", Util.DATE_FORMAT.format(calendar.getTime()), "withdrawal", null, null);
+
+        calendar = Calendar.getInstance();
+        calendar.add(Calendar.MONTH, -2);
+        calendar.add(Calendar.HOUR, -2);
+        Util.insertTransaction(sessionId, "400.00", Util.DATE_FORMAT.format(calendar.getTime()), "deposit", null, null);
+
+        calendar = Calendar.getInstance();
+        calendar.add(Calendar.MONTH, -1);
+        calendar.add(Calendar.HOUR, -2);
+        Util.insertTransaction(sessionId, "100.00", Util.DATE_FORMAT.format(calendar.getTime()), "withdrawal", null, null);
+
+        calendar = Calendar.getInstance();
+        calendar.add(Calendar.MONTH, -1);
+        calendar.add(Calendar.HOUR, -2);
+        Util.insertTransaction(sessionId, "100.00", Util.DATE_FORMAT.format(calendar.getTime()), "withdrawal", null, null);
+
+        calendar = Calendar.getInstance();
+        calendar.add(Calendar.HOUR, -2);
+        Util.insertTransaction(sessionId, "200.00", Util.DATE_FORMAT.format(calendar.getTime()), "deposit", null, null);
+
+        calendar = Calendar.getInstance();
+        calendar.add(Calendar.HOUR, -2);
+        Util.insertTransaction(sessionId, "50.00", Util.DATE_FORMAT.format(calendar.getTime()), "withdrawal", null, null);
+
+        JsonPath response = given()
+                .header("X-session-ID", sessionId)
+                .queryParam("interval", "month")
+                .queryParam("intervals", 3)
+                .get("/api/v1/balance/history")
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .extract()
+                .response()
+                .getBody()
+                .jsonPath();
+
+        assertEquals( 1250.00, response.getDouble("[0].open"), 0.01);
+        assertEquals(1600.00, response.getDouble("[0].close"), 0.01);
+        assertEquals(1600.00, response.getDouble("[0].high"), 0.01);
+        assertEquals(1200.00, response.getDouble("[0].low"), 0.01);
+        assertEquals(450.00, response.getDouble("[0].volume"), 0.01);
+
+        assertEquals( 1400.00, response.getDouble("[1].open"), 0.01);
+        assertEquals(1200.00, response.getDouble("[1].close"), 0.01);
+        assertEquals(1400.00, response.getDouble("[1].high"), 0.01);
+        assertEquals(1200.00, response.getDouble("[1].low"), 0.01);
+        assertEquals(200.00, response.getDouble("[1].volume"), 0.01);
+
+        assertEquals( 1200.00, response.getDouble("[2].open"), 0.01);
+        assertEquals(1350.00, response.getDouble("[2].close"), 0.01);
+        assertEquals(1400.00, response.getDouble("[2].high"), 0.01);
+        assertEquals(1200.00, response.getDouble("[2].low"), 0.01);
+        assertEquals(250.00, response.getDouble("[2].volume"), 0.01);
     }
 
     /*
@@ -239,7 +311,7 @@ public class SavingGoalsTests {
      */
     @Test
     public void validSessionInvalidSavingGoalsIdDeleteTest() {
-        invalidSessionValidSavingGoalsIdDeleteTest();
+        validSessionValidSavingGoalsIdDeleteTest();
 
         given()
                 .header("X-session-ID", sessionId)
