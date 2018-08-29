@@ -44,9 +44,12 @@ public class PaymentRequestTests {
      */
     @Test
     public void validSessionValidPaymentRequestsCreateTest() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MONTH, 3);
+
         String validPaymentRequest = "{\n" +
                 "  \"description\": \"Payback fo rlunch\",\n" +
-                "  \"due_date\": \"2018-08-22T16:09:32.998Z\",\n" +
+                "  \"due_date\": \"" + Util.DATE_FORMAT.format(calendar.getTime()) + "\",\n" +
                 "  \"amount\": 213.04,\n" +
                 "  \"number_of_requests\": 2\n" +
                 "}";
@@ -151,8 +154,8 @@ public class PaymentRequestTests {
     public void validSessionPaymentRequestsCalculationGetTest() {
         validSessionValidPaymentRequestsCreateTest();
 
-        System.out.println(Util.insertTransaction(sessionId, "213.04", "2018-08-21T16:18:36.915Z", "deposit", null,
-                null));
+        Util.insertTransaction(sessionId, "213.04", "2018-08-21T16:18:36.915Z", "deposit", null,
+                null);
         Util.insertTransaction(sessionId, "100.04", "2018-08-23T16:18:36.915Z", "deposit", null, null);
         Util.insertTransaction(sessionId, "212.04", "2018-08-24T16:18:36.915Z", "deposit", null, null);
         Util.insertTransaction(sessionId, "213.04", "2018-08-20T16:18:36.915Z", "deposit", null, null);
@@ -165,9 +168,7 @@ public class PaymentRequestTests {
                 .body(matchesJsonSchema(PAYMENT_REQUEST_LIST_SCHEMA))
                 .extract()
                 .jsonPath();
-        System.out.println(sessionId);
 
-        System.out.println(response.getString(""));
         assertTrue(response.getBoolean("[0].filled"));
     }
 

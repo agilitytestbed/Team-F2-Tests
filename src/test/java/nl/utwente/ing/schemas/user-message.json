@@ -1,0 +1,23 @@
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "integer"
+      },
+      "message": {
+        "type": "string"
+      },
+      "date": {
+        "type": "string"
+      },
+      "read": {
+        "type": "boolean"
+      },
+      "type": {
+        "type": "string"
+      }
+    }
+  }
+}
